@@ -1,3 +1,16 @@
+/**
+ * カメラを一時的に有効にしてカメラ許可/拒否の確認ダイアログを表示する
+ */
+ async function showConfirmDialog() {
+	const stream = await navigator.mediaDevices.getUserMedia({
+		video: true,
+		audio: false,
+	});
+	stream.getTracks().forEach(track => {
+		track.stop();
+	});
+}
+
 async function webcam(deviceId) {
 	const display = document.getElementById("display");
 
@@ -38,7 +51,8 @@ async function setCameraSelect(onSelect) {
 	});
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+	await showConfirmDialog();
 	setCameraSelect(deviceId => {
 		webcam(deviceId);
 	});
