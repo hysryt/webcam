@@ -1,0 +1,12 @@
+main {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.video-wrapper {
+    text-align: center;
+}
+
+video {
+    width: 640px;
+}
