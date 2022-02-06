@@ -123,26 +123,35 @@ class Display {
 		this.#video.height = '';
 	}
 
-	downloadCapture() {
-		const dataURL = this._capture();
-		this._downloadDataURL(dataURL);
+	async downloadCapture() {
+		const blob = await this._capture();
+		this._downloadBlob(blob);
 	}
 
 	/**
-	 * @return {string}
+	 * @return {Blob}
 	 */
-	_capture() {
+	async _capture() {
 		const canvas = document.getElementById('canvas');
 		canvas.width = this.#video.clientWidth;
 		canvas.height =  this.#video.clientHeight;
 		canvas.getContext('2d').drawImage(this.#video, 0, 0, this.#video.clientWidth, this.#video.clientHeight);
-		return canvas.toDataURL('image/jpeg');
+		return await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
 	}
 
-	_downloadDataURL(dataURL) {
+	/**
+	 * @param {Blob} blob
+	 */
+	_downloadBlob(blob) {
 		const download = document.createElement('a');
-		download.href = dataURL;
+		const objectUrl = URL.createObjectURL(blob);
+		download.href = objectUrl;
 		download.download = 'capture.jpg';
 		download.click();
+
+		// 10秒後にオブジェクトURL破棄
+		setTimeout(() => {
+			URL.revokeObjectURL(objectUrl);
+		}, 10000);
 	}
 }
