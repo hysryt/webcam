@@ -1,3 +1,20 @@
+window.addEventListener('DOMContentLoaded', async () => {
+	await showConfirmDialog();
+
+	const display = new Display();
+
+	// カメラ選択セレクタ
+	const cameraList = await getCameraList();
+	setCameraSelect(cameraList, camera => {
+		display.connectCamera(camera);
+	});
+
+	// キャプチャボタン
+	document.getElementById('capture-button').addEventListener('click', () => {
+		display.capture();
+	});
+});
+
 /**
  * カメラを一時的に有効にしてカメラ許可/拒否の確認ダイアログを表示する
  */
@@ -11,64 +28,104 @@
 	});
 }
 
-async function webcam(deviceId) {
-	const display = document.getElementById("display");
-
-	// 現在のカメラ停止
-	if (display.srcObject) {
-		display.srcObject.getTracks().forEach(track => {
-			track.stop();
-		});
-		display.srcObject = null;
-		display.style.height = '';
-	}
-
-	if (!deviceId) return;
-
-	const stream = await navigator.mediaDevices.getUserMedia({
-		video: {deviceId},
-		audio: false,
-	});
-	display.srcObject = stream;
-	display.style.height = 'auto';
-	display.play();
+/**
+ * カメラリスト取得
+ * @return {Promise<Camera[]>}
+ */
+async function getCameraList() {
+	const deviceList = await navigator.mediaDevices.enumerateDevices();
+	const list = deviceList.filter(device => device.kind === 'videoinput').map(device => {
+		return new Camera(device);
+	}).reduce((list, device) => {
+		return {...list, [device.deviceId]: device};
+	}, {});
+	return list;
 }
 
-async function setCameraSelect(onSelect) {
+/**
+ * カメラ選択セレクタ設定
+ * @param {Camera[]} cameraList 
+ * @param {(camera: Camera) => void} onSelect 
+ */
+async function setCameraSelect(cameraList, onSelect) {
 	const select = document.getElementById("camera-select");
 
-	const deviceList = await navigator.mediaDevices.enumerateDevices();
-	const cameraList = deviceList.filter(device => device.kind === 'videoinput');
-	cameraList.forEach(camera => {
+	Object.values(cameraList).forEach(camera => {
 		const option = document.createElement('option');
 		option.innerText = camera.label || camera.deviceId;
 		option.setAttribute('value', camera.deviceId);
 		select.appendChild(option);
-	});
+	})
 
 	select.addEventListener('change', () => {
-		onSelect(select.selectedOptions[0].value);
+		onSelect(cameraList[select.selectedOptions[0].value]);
 	});
 }
 
-function captureDisplay() {
-	const display = document.getElementById("display");
-	const canvas = document.getElementById('canvas');
-	canvas.width = display.clientWidth;
-	canvas.height =  display.clientHeight;
-	canvas.getContext('2d').drawImage(display, 0, 0, display.clientWidth, display.clientHeight);
+class Camera {
+	deviceId;
+	label;
+	#stream;
 
-	const download = document.createElement('a');
-	download.href = canvas.toDataURL('image/jpeg');
-	download.download = 'capture.jpg';
-	download.click();
+	constructor({deviceId, label}) {
+		this.deviceId = deviceId;
+		this.label = label;
+		this.#stream = null;
+	}
+
+	stop() {
+		if (this.#stream) {
+			this.#stream.getTracks().forEach(track => {
+				track.stop();
+			});
+		}
+	}
+
+	async start() {
+		this.#stream = await navigator.mediaDevices.getUserMedia({
+			video: {deviceId: this.deviceId},
+			audio: false,
+		});
+		return this.#stream;
+	}
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
-	await showConfirmDialog();
-	setCameraSelect(deviceId => {
-		webcam(deviceId);
-	});
+class Display {
+	#video;
+	#camera;
 
-	document.getElementById('capture-button').addEventListener('click', captureDisplay);
-});
+	constructor() {
+		this.#video = document.getElementById("display");
+	}
+
+	async connectCamera(camera) {
+		if (this.#camera) {
+			this.disconnectCamera();
+		}
+
+		display.srcObject = await camera.start();
+		display.style.height = 'auto';
+		display.play();
+		this.#camera = camera;
+	}
+
+	disconnectCamera() {
+		if (this.#camera) {
+			this.#camera.stop();
+		}
+		this.#video.srcObject = null;
+		this.#video.height = '';
+	}
+
+	capture() {
+		const canvas = document.getElementById('canvas');
+		canvas.width = this.#video.clientWidth;
+		canvas.height =  this.#video.clientHeight;
+		canvas.getContext('2d').drawImage(this.#video, 0, 0, this.#video.clientWidth, this.#video.clientHeight);
+	
+		const download = document.createElement('a');
+		download.href = canvas.toDataURL('image/jpeg');
+		download.download = 'capture.jpg';
+		download.click();
+	}
+}
