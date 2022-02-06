@@ -24,3 +24,15 @@ select {
     text-align: center;
     margin-bottom: 10px;
 }
+
+#canvas {
+    display: none;
+}
+
+.capture-button-wrapper {
+    margin-top: 10px;
+}
+
+#capture-button {
+    width: 100%;
+}

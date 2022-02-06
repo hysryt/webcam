@@ -51,9 +51,24 @@ async function setCameraSelect(onSelect) {
 	});
 }
 
+function captureDisplay() {
+	const display = document.getElementById("display");
+	const canvas = document.getElementById('canvas');
+	canvas.width = display.clientWidth;
+	canvas.height =  display.clientHeight;
+	canvas.getContext('2d').drawImage(display, 0, 0, display.clientWidth, display.clientHeight);
+
+	const download = document.createElement('a');
+	download.href = canvas.toDataURL('image/jpeg');
+	download.download = 'capture.jpg';
+	download.click();
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
 	await showConfirmDialog();
 	setCameraSelect(deviceId => {
 		webcam(deviceId);
 	});
-})
+
+	document.getElementById('capture-button').addEventListener('click', captureDisplay);
+});
