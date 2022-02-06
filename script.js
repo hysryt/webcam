@@ -11,7 +11,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 	// キャプチャボタン
 	document.getElementById('capture-button').addEventListener('click', () => {
-		display.capture();
+		display.downloadCapture();
 	});
 });
 
@@ -122,15 +122,26 @@ class Display {
 		this.#video.srcObject = null;
 		this.#video.height = '';
 	}
-	
-	capture() {
+
+	downloadCapture() {
+		const dataURL = this.#capture();
+		this.#downloadDataURL(dataURL);
+	}
+
+	/**
+	 * @return {string}
+	 */
+	#capture() {
 		const canvas = document.getElementById('canvas');
 		canvas.width = this.#video.clientWidth;
 		canvas.height =  this.#video.clientHeight;
 		canvas.getContext('2d').drawImage(this.#video, 0, 0, this.#video.clientWidth, this.#video.clientHeight);
-	
+		return canvas.toDataURL('image/jpeg');
+	}
+
+	#downloadDataURL(dataURL) {
 		const download = document.createElement('a');
-		download.href = canvas.toDataURL('image/jpeg');
+		download.href = dataURL;
 		download.download = 'capture.jpg';
 		download.click();
 	}
