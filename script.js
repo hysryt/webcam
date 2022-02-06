@@ -11,7 +11,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 	// キャプチャボタン
 	document.getElementById('capture-button').addEventListener('click', () => {
-		display.downloadCapture();
+		display.capture();
 	});
 });
 
@@ -67,9 +67,6 @@ class Camera {
 	label;
 	#stream;
 
-	/**
-	 * @param {MediaDeviceInfo} param0 
-	 */
 	constructor({deviceId, label}) {
 		this.deviceId = deviceId;
 		this.label = label;
@@ -84,9 +81,6 @@ class Camera {
 		}
 	}
 
-	/**
-	 * @return {Promise<MediaStream>}
-	 */
 	async start() {
 		this.#stream = await navigator.mediaDevices.getUserMedia({
 			video: {deviceId: this.deviceId},
@@ -123,35 +117,15 @@ class Display {
 		this.#video.height = '';
 	}
 
-	async downloadCapture() {
-		const blob = await this.#capture();
-		this.#downloadBlob(blob);
-	}
-
-	/**
-	 * @return {Promise<Blob>}
-	 */
-	async #capture() {
+	capture() {
 		const canvas = document.getElementById('canvas');
 		canvas.width = this.#video.clientWidth;
 		canvas.height =  this.#video.clientHeight;
 		canvas.getContext('2d').drawImage(this.#video, 0, 0, this.#video.clientWidth, this.#video.clientHeight);
-		return await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'))
-	}
-
-	/**
-	 * @param {Blob} blob 
-	 */
-	#downloadBlob(blob) {
+	
 		const download = document.createElement('a');
-		const objectUrl = URL.createObjectURL(blob);
-		download.href = objectUrl;
+		download.href = canvas.toDataURL('image/jpeg');
 		download.download = 'capture.jpg';
 		download.click();
-
-		// 10秒後にオブジェクトURL破棄
-		setTimeout(() => {
-			URL.revokeObjectURL(objectUrl);
-		}, 10000);
 	}
 }
