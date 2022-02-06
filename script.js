@@ -67,6 +67,9 @@ class Camera {
 	label;
 	#stream;
 
+	/**
+	 * @param {MediaDeviceInfo} param0 
+	 */
 	constructor({deviceId, label}) {
 		this.deviceId = deviceId;
 		this.label = label;
@@ -81,6 +84,9 @@ class Camera {
 		}
 	}
 
+	/**
+	 * @return {Promise<MediaStream>}
+	 */
 	async start() {
 		this.#stream = await navigator.mediaDevices.getUserMedia({
 			video: {deviceId: this.deviceId},
@@ -116,7 +122,7 @@ class Display {
 		this.#video.srcObject = null;
 		this.#video.height = '';
 	}
-
+	
 	capture() {
 		const canvas = document.getElementById('canvas');
 		canvas.width = this.#video.clientWidth;
