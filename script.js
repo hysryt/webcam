@@ -124,14 +124,14 @@ class Display {
 	}
 
 	downloadCapture() {
-		const dataURL = this.#capture();
-		this.#downloadDataURL(dataURL);
+		const dataURL = this._capture();
+		this._downloadDataURL(dataURL);
 	}
 
 	/**
 	 * @return {string}
 	 */
-	#capture() {
+	_capture() {
 		const canvas = document.getElementById('canvas');
 		canvas.width = this.#video.clientWidth;
 		canvas.height =  this.#video.clientHeight;
@@ -139,7 +139,7 @@ class Display {
 		return canvas.toDataURL('image/jpeg');
 	}
 
-	#downloadDataURL(dataURL) {
+	_downloadDataURL(dataURL) {
 		const download = document.createElement('a');
 		download.href = dataURL;
 		download.download = 'capture.jpg';
