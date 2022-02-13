@@ -34,8 +34,19 @@ select {
     margin-top: 10px;
 }
 
-#capture-button {
+#capture-button,
+#capture-movie-start-button,
+#capture-movie-stop-button {
     width: 100%;
+}
+
+#capture-movie-start-button,
+#capture-movie-stop-button {
+    margin-top: 10px;
+}
+
+#capture-movie-stop-button {
+    display: none;
 }
 
 .version {

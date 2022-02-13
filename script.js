@@ -9,9 +9,25 @@ window.addEventListener('DOMContentLoaded', async () => {
 		display.connectCamera(camera);
 	});
 
-	// キャプチャボタン
+	// 静止画でキャプチャボタン
 	document.getElementById('capture-button').addEventListener('click', () => {
 		display.downloadCapture();
+	});
+
+	// 動画でキャプチャボタン
+	document.getElementById('capture-movie-start-button').addEventListener('click', () => {
+		display.startRecord();
+
+		document.getElementById('capture-movie-start-button').style.display = 'none';
+		document.getElementById('capture-movie-stop-button').style.display = 'block';
+	});
+
+	// キャプチャ停止ボタン
+	document.getElementById('capture-movie-stop-button').addEventListener('click', () => {
+		display.stopRecord();
+
+		document.getElementById('capture-movie-start-button').style.display = 'block';
+		document.getElementById('capture-movie-stop-button').style.display = 'none';
 	});
 });
 
@@ -81,6 +97,7 @@ class Camera {
 			this.#stream.getTracks().forEach(track => {
 				track.stop();
 			});
+			this.#stream = null;
 		}
 	}
 
@@ -94,14 +111,27 @@ class Camera {
 		});
 		return this.#stream;
 	}
+
+	/**
+	 * ストリームを取得
+	 * @returns {MediaStream}
+	 */
+	getStream() {
+		if (!this.#stream) {
+			throw new Error('カメラが起動していません');
+		}
+		return this.#stream;
+	}
 }
 
 class Display {
 	#video;
 	#camera;
+	#recorder;
 
 	constructor() {
 		this.#video = document.getElementById("display");
+		this.#recorder = null;
 	}
 
 	async connectCamera(camera) {
@@ -147,6 +177,90 @@ class Display {
 		const objectUrl = URL.createObjectURL(blob);
 		download.href = objectUrl;
 		download.download = 'capture.jpg';
+		download.click();
+
+		// 10秒後にオブジェクトURL破棄
+		setTimeout(() => {
+			URL.revokeObjectURL(objectUrl);
+		}, 10000);
+	}
+
+	/**
+	 * 録画開始
+	 */
+	startRecord() {
+		if (!this.#camera) {
+			throw new Error('カメラが選択されていません');
+		}
+
+		this.#recorder = new Recorder(this.#camera.getStream());
+		this.#recorder.start();
+	}
+
+	/**
+	 * 録画終了
+	 */
+	stopRecord() {
+		if (!this.#recorder) {
+			throw new Error('録画が開始されていません');
+		}
+
+		this.#recorder.stop();
+		this.#recorder.download();
+		this.#recorder = null;
+	}
+}
+
+
+class Recorder {
+	#isRecording = false;
+	#recorder = null;
+	#mimeType = 'video/webm';
+	#extension = '.webm';
+	#chunks = [];
+
+	constructor(stream) {
+		this.#recorder = new MediaRecorder(stream, {
+			mimeType: this.#mimeType,
+		});
+
+		this.#recorder.ondataavailable = (e) => {
+			this.#chunks.push(e.data);
+		}
+	}
+
+	start() {
+		if (this.#isRecording) {
+			throw new Error('既に録画中です');
+		}
+
+		this.#isRecording = true;
+		this.#recorder.start(1000);
+	}
+
+	stop() {
+		if (!this.#isRecording) {
+			throw new Error('録画開始されていません');
+		}
+
+		this.#recorder.stop();
+		this.#isRecording = false;
+	}
+
+	download() {
+		if (this.#chunks.length === 0) {
+			throw new Error('録画データがありません');
+		}
+		
+		var blob = new Blob(this.#chunks, {type: this.#mimeType});
+		this._downloadBlob(blob);
+	}
+
+	_downloadBlob(blob) {
+		const objectUrl = URL.createObjectURL(blob);
+		const download = document.createElement('a');
+		download.href = objectUrl;
+		download.download = 'capture' + this.#extension;
 		download.click();
 
 		// 10秒後にオブジェクトURL破棄
