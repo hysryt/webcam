@@ -10,6 +10,7 @@ main {
 }
 
 .video-wrapper {
+    position: relative;
     text-align: center;
 }
 
@@ -63,4 +64,16 @@ select {
     font-size: 12px;
     padding: 2px 8px;
     color: #aaa;
+}
+
+#record-mark {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: 10px;
+    right: 10px;
+    background: #ec3a3a;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #ec3a3a;
+    display: none;
 }

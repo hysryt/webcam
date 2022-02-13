@@ -18,6 +18,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 	document.getElementById('capture-movie-start-button').addEventListener('click', () => {
 		display.startRecord();
 
+		document.getElementById('record-mark').style.display = 'block';
 		document.getElementById('capture-movie-start-button').style.display = 'none';
 		document.getElementById('capture-movie-stop-button').style.display = 'block';
 	});
@@ -26,6 +27,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 	document.getElementById('capture-movie-stop-button').addEventListener('click', () => {
 		display.stopRecord();
 
+		document.getElementById('record-mark').style.display = '';
 		document.getElementById('capture-movie-start-button').style.display = 'block';
 		document.getElementById('capture-movie-stop-button').style.display = 'none';
 	});
